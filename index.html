@@ -1,0 +1,255 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Параметры Башенного Крана</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/package/xlsx.mjs",
+          "three": "https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/",
+          "./sceneManager.js": "./sceneManager.js",
+          "./playbackManager.js": "./playbackManager.js",
+          "./labelManager.js": "./labelManager.js",
+          "./craneMaterials.js": "./craneMaterials.js",
+          "./craneComponents.js": "./craneComponents.js"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="config-container">
+        <h1>Конфигуратор Башенного Крана</h1>
+
+        <form id="crane-config-form">
+            <fieldset>
+                <legend>Основные Характеристики</legend>
+
+                <div class="form-group">
+                    <label>1. Вид крана:</label>
+                    <label><input type="radio" name="craneType" value="ZTT" required> Прямая стрела (ZTT)</label>
+                    <label><input type="radio" name="craneType" value="ZTL"> Маховая стрела (ZTL)</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="liftingCapacity">2. Грузоподъёмность крана (тонн):</label>
+                    <select id="liftingCapacity" name="liftingCapacity" required>
+                        <option value="6">6</option>
+                        <option value="8">8</option>
+                        <option value="10" selected>10</option>
+                        <option value="12">12</option>
+                        <option value="14">14</option>
+                        <option value="16">16</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="jibLength">3. Длина стрелы (м):</label>
+                    <input type="number" id="jibLength" name="jibLength" min="15" max="80" step="2.5" value="50" required>
+                    <span class="range-hint">(15 - 80 м, шаг 2.5 м)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="counterJibLength">4. Длина консоли с противовесом (м):</label>
+                    <input type="number" id="counterJibLength" name="counterJibLength" min="3" max="30" step="0.5" value="15" required>
+                    <span class="range-hint">(от центра мачты, 3 - 30 м)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="zeroAngleDirection">12. Направление 0° (базовый север):</label>
+                    <select id="zeroAngleDirection" name="zeroAngleDirection" required>
+                        <option value="N" selected>Север (N)</option>
+                        <option value="E">Восток (E)</option>
+                        <option value="S">Юг (S)</option>
+                        <option value="W">Запад (W)</option>
+                        <option value="custom">Пользовательский угол</option>
+                    </select>
+                    <input type="number" id="customZeroAngle" name="customZeroAngle" min="0" max="359" step="1" placeholder="Угол (°)" style="display:none; margin-left:10px;">
+                    <span class="range-hint">(задайте направление 0° для планирования нескольких кранов)</span>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Конструкция Мачты</legend>
+
+                <div class="form-group">
+                    <label for="mastHeight">5. Высота мачты крана (м):</label>
+                    <input type="number" id="mastHeight" name="mastHeight" min="10" max="300" step="0.1" value="50" required>
+                    <span class="range-hint">(от анкеров до стрелы, 10 - 300 м)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="mastSectionSize">10. Квадратное сечение мачты (м):</label>
+                    <input type="number" id="mastSectionSize" name="mastSectionSize" min="1.5" max="5" step="0.1" value="2.0" required>
+                    <span class="range-hint">(1.5x1.5 - 5x5 м)</span>
+                </div>
+
+                <div class="form-group">
+                    <label><input type="checkbox" id="isWallTied" name="isWallTied"> 6. Кран крепится к зданию?</label>
+                </div>
+
+                <div id="wall-ties-section" class="hidden">
+                    <div class="form-group">
+                        <label for="wallTieCount">Количество стеновых креплений:</label>
+                        <input type="number" id="wallTieCount" name="wallTieCount" min="1" max="20" value="1">
+                        <span class="range-hint">(1 - 20)</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wallTieSide">Сторона крепления:</label>
+                        <select id="wallTieSide" name="wallTieSide">
+                            <option value="N">Север (N)</option>
+                            <option value="E" selected>Восток (E)</option>
+                            <option value="S">Юг (S)</option>
+                            <option value="W">Запад (W)</option>
+                        </select>
+                        <span class="range-hint">(направление с мачты к стене здания)</span>
+                    </div>
+                    
+                    <div id="wall-tie-heights" class="form-group dynamic-inputs">
+                        <label>Высота установки креплений (м):</label>
+                        <span class="range-hint">(15 - 300 м)</span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Верхняя Часть и Подъём</legend>
+                <div class="form-group">
+                    <label for="mastTopToSlewHeight">7. Высота от верха мачты до ОПУ (м):</label>
+                    <input type="number" id="mastTopToSlewHeight" name="mastTopToSlewHeight" min="0.5" max="3" step="0.1" value="1.5" required>
+                    <span class="range-hint">(0.5 - 3 м)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="slewToUpperHeight">8. Высота верхнего габарита от ОПУ (м):</label>
+                    <input type="number" id="slewToUpperHeight" name="slewToUpperHeight" min="1.5" max="5" step="0.1" value="3.0" required>
+                    <span class="range-hint">(1.5 - 5 м)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="hookMaxHeight">9. Максимальная высота подъёма крюка (м):</label>
+                    <input type="number" id="hookMaxHeight" name="hookMaxHeight" min="10" max="300" step="0.1" value="45" required>
+                    <span class="range-hint">(10 - 300 м)</span>
+                </div>
+                <div class="form-group">
+                    <label>Отсчёт высоты подъёма от:</label>
+                    <label><input type="radio" name="hookHeightReference" value="jib" required> Стрелы (0 = уровень стрелы)</label>
+                    <label><input type="radio" name="hookHeightReference" value="ground" checked> Земли (0 = уровень анкеров)</label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Данные Истории Работы</legend>
+                <div class="form-group">
+                    <label for="historyFile">11. Импорт файла истории (.xls, .xlsx, .csv):</label>
+                    <input type="file" id="historyFile" name="historyFile" accept=".csv, .xls, .xlsx">
+                </div>
+            </fieldset>
+
+            <button type="submit" id="submit-button">Подтвердить и Визуализировать</button>
+            <div id="loading-indicator" class="hidden">Обработка данных...</div>
+        </form>
+    </div>
+
+    <div id="visualization-container" class="hidden">
+        <h1>Визуализация Башенного Крана</h1>
+        <div id="scene-canvas-wrapper">
+             <div id="scene-canvas"></div>
+             <svg id="axes-legend" width="160" height="120" style="position:absolute; left:20px; top:20px; z-index:30; pointer-events:none;">
+                <g>
+                  <line x1="40" y1="80" x2="130" y2="80" stroke="#2062af" stroke-width="3"/>
+                  <text x="133" y="84" font-size="17" fill="#2062af" font-family="monospace">X</text>
+                  <line x1="40" y1="80" x2="40" y2="8" stroke="#18ac35" stroke-width="3"/>
+                  <text x="34" y="20" font-size="17" fill="#18ac35" font-family="monospace">Y</text>
+                  <line x1="40" y1="80" x2="70" y2="105" stroke="#cb1313" stroke-width="3"/>
+                  <text x="73" y="115" font-size="17" fill="#cb1313" font-family="monospace">Z</text>
+                </g>
+             </svg>
+             <div id="data-labels-container">
+                 <div id="label-hook-info" class="data-label"></div>
+                 <div id="label-wind-info" class="data-label wind-speed-label"></div>
+             </div>
+        </div>
+        <div id="analytics-panel">
+            <h3>Аналитика операций</h3>
+            <div id="analytics-content"></div>
+        </div>
+
+        <div id="visualization-controls">
+            <fieldset class="controls-fieldset">
+                 <legend>Управление Воспроизведением</legend>
+                 <div id="playback-controls">
+                     <button id="reverse-button" title="Воспроизведение назад"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6 18V6h2v12H6zm3.5-6L18 6v12l-8.5-6z"/></svg></button>
+                     <button id="play-pause-button" title="Пуск/Пауза"><svg class="play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 19V5l11 7l-11 7z"/></svg><svg class="pause-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+                     <input type="range" id="timeline-slider" min="0" max="1000" value="0" step="1" style="width: 800px" disabled>
+                     <span id="timestamp-display">--:--:--</span>
+                 </div>
+                 <div id="speed-controls">
+                     <label for="speed-selector">Скорость:</label>
+                     <select id="speed-selector">
+                         <option value="0.25">0.25x</option>
+                         <option value="0.5">0.5x</option>
+                         <option value="1" selected>1x</option>
+                         <option value="2">2x</option>
+                         <option value="4">4x</option>
+                         <option value="8">8x</option>
+                         <option value="16">16x</option>
+                         <option value="32">32x</option>
+                         <option value="64">64x</option>
+                         <option value="128">128x</option>
+                     </select>
+                 </div>
+            </fieldset>
+
+            <fieldset class="controls-fieldset">
+                <legend>Отображение Данных</legend>
+                <div id="label-toggles">
+                    <label><input type="checkbox" id="toggle-hook-label" checked> Инфо у крюка</label>
+                    <label><input type="checkbox" id="toggle-analytics" checked> Анализ операций</label>
+                    <label><input type="checkbox" id="toggle-paths" checked> Траектории движения</label>
+                    <label><input type="checkbox" id="toggle-zones" checked> Зоны погрузки/выгрузки</label>
+                </div>
+            </fieldset>
+            
+            <fieldset class="controls-fieldset">
+                <legend>Визуальные элементы</legend>
+                <div id="visual-toggles">
+                    <label><input type="checkbox" id="toggle-grid" checked> Координатная сетка</label>
+                    <label><input type="checkbox" id="toggle-axes" checked> Оси координат</label>
+                    <label><input type="checkbox" id="toggle-ropes" checked> Тросы и канаты</label>
+                    <label><input type="checkbox" id="toggle-ground" checked> Земля/Основание</label>
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="camera-preview-container hidden">
+            <h4>Предпросмотр камер (будущая функция)</h4>
+            <div class="camera-previews">
+                <div class="camera-preview" id="camera-hook">
+                    <h5>Камера крюка</h5>
+                    <div class="camera-placeholder"></div>
+                </div>
+                <div class="camera-preview" id="camera-trolley">
+                    <h5>Камера каретки</h5>
+                    <div class="camera-placeholder"></div>
+                </div>
+                <div class="camera-preview" id="camera-hoist">
+                    <h5>Камера лебёдки</h5>
+                    <div class="camera-placeholder"></div>
+                </div>
+                <div class="camera-preview" id="camera-cab">
+                    <h5>Камера кабины</h5>
+                    <div class="camera-placeholder"></div>
+                </div>
+            </div>
+        </div>
+
+        <button id="back-to-config">Назад к Конфигурации</button>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
