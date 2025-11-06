@@ -92,7 +92,8 @@ project/
 - [ ] Интеграция с системами видеонаблюдения
 - [ ] Автоматическое определение типов грузов
    <img width="766" height="657" alt="Снимок экрана от 2025-11-06 11-16-00" src="https://github.com/user-attachments/assets/cbdbc011-a93f-4a14-9b29-34e35bbd04b0" />
-   
+<img width="336" height="402" alt="Снимок экрана от 2025-11-06 17-00-49" src="https://github.com/user-attachments/assets/77a79b1a-504e-4480-ab1f-16c452d974b4" />
+
 - [ ] Оптимизация траекторий движения
 - [ ] Предиктивное обслуживание
 
