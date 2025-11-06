@@ -83,6 +83,8 @@ project/
 - Первая строка содержит заголовки колонок
 - Все числовые значения должны быть в указанных единицах измерения, как в примере
 <img width="1355" height="917" alt="изображение" src="https://github.com/user-attachments/assets/8bb7816e-40ec-469f-8927-cfea7a813804" />
+<img width="774" height="761" alt="изображение" src="https://github.com/user-attachments/assets/cbce7e76-072d-456f-8f22-e3d70948213e" />
+
 
 ## Планы развития
 - [ ] Интеграция с системами видеонаблюдения
